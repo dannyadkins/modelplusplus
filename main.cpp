@@ -206,7 +206,7 @@ void test_dense_layer() {
     dense_layer.op = &relu;
 
     dense_layer.forward();
-    dense_layer.backward();
+    // dense_layer.backward();
     cout << "dense layer weights: " << endl;
     for (auto& row : dense_layer.weights) {
         for (auto& w : row) {
@@ -219,16 +219,16 @@ void test_dense_layer() {
         cout << b << " ";
     }
     cout << endl;
-    cout << "dense layer gradients: " << endl;
-    for (auto& g : dense_layer.gradients) {
-        cout << g << " ";
-    }
-    cout << endl;
-    cout << "tensor input grad: " << endl;
-    for (auto& g : tensor_input.grad) {
-        cout << g << " ";
-    }
-    cout << endl;
+    // cout << "dense layer gradients: " << endl;
+    // for (auto& g : dense_layer.gradients) {
+    //     cout << g << " ";
+    // }
+    // cout << endl;
+    // cout << "tensor input grad: " << endl;
+    // for (auto& g : tensor_input.grad) {
+    //     cout << g << " ";
+    // }
+    // cout << endl;
 }
 
 // main func
