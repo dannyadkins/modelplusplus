@@ -213,6 +213,13 @@ void test_grad() {
     std::cout << "Passed: test_grad" << std::endl;
 }
 
+void test_num_params() {
+    auto mlp = MLP(2, {16, 16, 1});
+    std::cout << mlp.repr() << std::endl;
+    assert(mlp.parameters().size() == 2*16 + 16*16 + 16*1 + 16 + 16 + 1);
+    std::cout << "Passed: test_num_params" << std::endl;
+}
+
 void test_mlp() {
     auto mlp = MLP(2, {3, 1});
     auto x = std::vector<std::shared_ptr<Value>>{std::make_shared<Value>(1.0), std::make_shared<Value>(2.0)};
@@ -224,6 +231,7 @@ void test_mlp() {
 // main func
 int main() {
     test_grad();
+    test_num_params();
     test_mlp();
     return 0;
 }
