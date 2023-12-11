@@ -227,11 +227,82 @@ void test_mlp() {
     y[0]->backward(y[0]); 
 }
 
+// WIP 
+std::shared_ptr<Value> loss(std::vector<std::shared_ptr<Value>> X, std::vector<std::shared_ptr<Value>> y, std::shared_ptr<MLP> model, int batch_size) {
+
+    std::vector<std::vector<std::shared_ptr<Value>>> inputs;
+    for (auto& xrow : X) {
+        std::vector<std::shared_ptr<Value>> row;
+        row.push_back(xrow);
+        inputs.push_back(row);
+    }
+    // print 
+    std::cout << "Inputs: " << std::endl;
+    for (auto& input : inputs) {
+        std::cout << input[0]->data << std::endl;
+    }
+
+    // forward the model to get scores
+    std::vector<std::shared_ptr<Value>> scores;
+    for (auto& input : inputs) {
+        scores.push_back(model->operator()(input)[0]);
+    }
+    // print scores
+    std::cout << "Scores: " << std::endl;
+    for (auto& score : scores) {
+        std::cout << score->data << std::endl;
+    }
+
+    // svm "max-margin" loss
+    std::vector<std::shared_ptr<Value>> losses;
+    for (int i = 0; i < y.size(); ++i) {
+        losses.push_back(Value::add(std::make_shared<Value>(1.0), Value::multiply(y[i], scores[i])));
+    }
+    std::shared_ptr<Value> data_loss = std::make_shared<Value>(0.0);
+    for (auto& lossi : losses) {
+        data_loss = Value::add(data_loss, lossi);
+    }
+    data_loss = Value::multiply(data_loss, std::make_shared<Value>(1.0 / losses.size()));
+    // L2 regularization
+    float alpha = 1e-4;
+    std::shared_ptr<Value> reg_loss = std::make_shared<Value>(0.0);
+    for (auto& p : model->parameters()) {
+        reg_loss = Value::add(reg_loss, Value::multiply(p, p));
+    }
+    reg_loss = Value::multiply(reg_loss, std::make_shared<Value>(alpha));
+    std::shared_ptr<Value> total_loss = Value::add(data_loss, reg_loss);
+
+    // also get accuracy
+    std::vector<std::shared_ptr<Value>> accuracy;
+    for (int i = 0; i < y.size(); ++i) {
+        accuracy.push_back(Value::add(std::make_shared<Value>(y[i]->data > 0), std::make_shared<Value>(scores[i]->data > 0)));
+    }
+    std::shared_ptr<Value> acc = std::make_shared<Value>(0.0);
+    for (auto& acci : accuracy) {
+        acc = Value::add(acc, acci);
+    }
+    acc = Value::multiply(acc, std::make_shared<Value>(1.0 / accuracy.size()));
+    
+    return total_loss;
+}
+
+void test_loss() {
+    auto mlp = MLP(2, {16, 16, 1});
+    auto x = std::vector<std::shared_ptr<Value>>{std::make_shared<Value>(1.0), std::make_shared<Value>(2.0)};
+    auto y = std::vector<std::shared_ptr<Value>>{std::make_shared<Value>(1.0)};
+    auto l = loss(x, y, std::make_shared<MLP>(mlp), -1);
+    l->backward(l);
+    // print loss
+    std::cout << l->data << std::endl;
+    std::cout << "Passed: test_loss" << std::endl;
+}
+
 
 // main func
 int main() {
     test_grad();
     test_num_params();
     test_mlp();
+    test_loss();
     return 0;
 }
